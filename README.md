@@ -5,5 +5,5 @@
 **注意:** shuttle暂时不支持最新版本的Rust
 
 demo 地址:   
-https://myqr.shuttleapp.rs/  
-https://myqr.shuttleapp.rs/hello
+<a href="https://myqr.shuttleapp.rs" target="_blank">https://myqr.shuttleapp.rs</a>  
+<a href="https://myqr.shuttleapp.rs/hello" target="_blank">https://myqr.shuttleapp.rs/hello</a>
