@@ -7,3 +7,6 @@
 demo 地址:   
 <a href="https://myqr.shuttleapp.rs" target="_blank">https://myqr.shuttleapp.rs</a>  
 <a href="https://myqr.shuttleapp.rs/hello" target="_blank">https://myqr.shuttleapp.rs/hello</a>
+
+api demo https://myqr.shuttleapp.rs/api/hello2?name=jack  
+swagger doc example https://myqr.shuttleapp.rs/docs  
