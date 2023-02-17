@@ -67,3 +67,9 @@ answer in discord:
     这是由于如果在.gitignore忽略了前端编译的文件那么shuttle也会忽略.  
     解决办法: https://discord.com/channels/803236282088161321/1072652298678960269/1075338035601879130  
     使用.ignore再设置为不忽略,这样git会忽略,shuttle不会忽略
+2. 遇到部署时卡住很久很久或爆500错误后再也无法部署  
+    重启这个项目:    
+    ```shell
+    cargo shuttle project rm
+    cargo shuttle project new
+    ```
