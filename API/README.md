@@ -31,7 +31,7 @@ cargo shuttle deploy --allow-dirty
 cargo shuttle run
 ```
 
-## 报错解决
+## 报错解决(貌似只有windows才会必须使用1.65?)
 error:
 >error: couldn't read \\?\x:\...\target\debug\build\rustversion-...\out/version.expr: 文件名、目录名或卷标语法不正确。 (os error 123)
 
@@ -43,7 +43,7 @@ answer in discord:
 1. 对项目使用指定rust版本,方式一(实际修改了.rustup/settings.toml)
     - 在工程中执行: rustup override set 1.65
     - 移除指定的版本: rustup override unset
-2. 方式二
+2. 方式二:
    - 工程中创建: rust-toolchain.toml
    - 添加内容:
    
@@ -52,10 +52,12 @@ answer in discord:
     channel = "1.65"
     # channel = "nightly"
     ```
-
-```shell
-# 使用1.65重新安装cargo-shuttle (或者直接binstall[未测])
-cargo +1.65 install cargo-shuttle --force
-cargo +1.65 build
-cargo +1.65 shuttle run
-```
+3. 方式三: 每次执行时添加+1.65
+    ```shell
+    # 安装rust 1.65
+    rustup toolchain install 1.65
+    # 使用1.65重新安装cargo-shuttle (或者直接binstall[未测])
+    cargo +1.65 install cargo-shuttle --force
+    cargo +1.65 build
+    cargo +1.65 shuttle run
+    ```
