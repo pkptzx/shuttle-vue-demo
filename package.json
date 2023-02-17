@@ -7,7 +7,7 @@
     "dev": "concurrently -r \"vite\" \"cargo +1.65 shuttle run --working-directory ./API\"",
     "build": "vue-tsc && vite build --emptyOutDir",
     "build:all": "vue-tsc && vite build --emptyOutDir && cd API && cargo build",
-    "shuttle:deploy": "pnpm build && cargo +1.65 shuttle deploy --working-directory ./API"
+    "shuttle:deploy": "pnpm build && cargo +1.65 shuttle deploy --allow-dirty --working-directory ./API"
   },
   "dependencies": {
     "@vueuse/core": "^9.12.0",

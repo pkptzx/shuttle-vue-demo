@@ -61,3 +61,9 @@ answer in discord:
     cargo +1.65 build
     cargo +1.65 shuttle run
     ```
+
+## QA
+1. 不想git提交前端编译后的文件,导致部署失败  
+    这是由于如果在.gitignore忽略了前端编译的文件那么shuttle也会忽略.  
+    解决办法: https://discord.com/channels/803236282088161321/1072652298678960269/1075338035601879130  
+    使用.ignore再设置为不忽略,这样git会忽略,shuttle不会忽略
