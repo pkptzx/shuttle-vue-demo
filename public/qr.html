@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="no-referrer">
+  <title>二维码解析</title>
+</head>
+
+<body>
+  <input type="file" id="image-file" />
+  <img id="image-preview" width="100px" height="100px" s />
+  <div id="info"></div>
+  <hr />
+  <canvas id="canvas"></canvas>
+  <div id="result"></div>
+  <script crossorigin="anonymous"
+    integrity="sha512-hAz8pxm1kva4chZWPXQhGehvvlIj1Loka653sQXoYHNj4sgSukoR3ZKyHEOT7kFGVW17wUqD9CbKeviIJ2XFKQ=="
+    src="https://lib.baomitu.com/qrcode/1.5.1/qrcode.js"></script>
+    <script  crossorigin="anonymous" type="module" src="https://cdn.jsdelivr.net/npm/qrcode-parser@2.0.4/dist/qrcodeParser.umd.js"></script>
+  <script type="module">
+    // import qrcodeParser from "qrcode-parser";
+
+    // QRCode.toCanvas(document.getElementById("canvas"), "sample text", function (error) {
+    //   if (error) console.error(error);
+    //   console.log("success!");
+    // });
+    // QRCode.toString("http://www.google.com", function (err, string) {
+    //   if (err) throw err;
+    //   console.log(string);
+    // });
+    // function getBase64FromImageUrl(url) {
+    //   const img = new Image();
+    //   // img.setAttribute("crossOrigin", "anonymous");
+    //   img.onload = function () {
+    //     const canvas = document.createElement("canvas");
+    //     canvas.width = this.width;
+    //     canvas.height = this.height;
+    //     const ctx = canvas.getContext("2d");
+    //     ctx.drawImage(this, 0, 0);
+    //     const imgData = ctx.getImageData(0, 0, 1, 1);
+    //     console.log(imgData)
+    //     document.body.appendChild(canvas);
+
+
+
+    //     // const dataURL = canvas.toDataURL();//"image/png"
+    //     //   alert(dataURL.replace(/^data:image\/(png|jpg);base64,/, ""));
+    //     // console.log(dataURL)
+    //     // qrcodeParser(v).then(v => {
+    //     //     console.log(v);
+    //     //     info.innerHTML = `2二维码解析结果: ${v}`
+    //     // }).catch(err => {
+    //     //     console.log(err);
+    //     //     info.innerHTML = `2解析失败: ${err}`
+    //     // });
+    //   };
+
+    //   img.src = url;
+    //   // document.body.appendChild(img);
+    // }
+
+    const imageFile = document.getElementById("image-file");
+    const imagePreview = document.getElementById("image-preview");
+    const info = document.getElementById("info");
+    imageFile.addEventListener("change", function () {
+      // 清除背景图片:
+      imagePreview.style.backgroundImage = "";
+      // 检查文件是否选择:
+      if (!imageFile.value) {
+        info.innerHTML = "没有选择文件";
+        return;
+      }
+      // 获取File引用:
+      var file = imageFile.files[0];
+      // 获取File信息:
+      info.innerHTML = "文件: " + file.name + "<br>" + "大小: " + file.size + "<br>" + "修改: " + file.lastModifiedDate;
+      if (file.type !== "image/jpeg" && file.type !== "image/png" && file.type !== "image/gif") {
+        alert("不是有效的图片文件!");
+        return;
+      }
+      // 读取文件:
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        var data = e.target.result; // 'data:image/jpeg;base64,/9j/4AAQSk...(base64编码)...'
+        imagePreview.style.backgroundImage = "url(" + data + ")";
+        imagePreview.src = data;
+        qrcodeParser(data)
+          .then((v) => {
+            console.log(v);
+            info.innerHTML = `二维码解析结果: ${v}`;
+            // http://api.allorigins.win/raw?url=
+            // fetch(`${v}`,{mode:'no-cors'}).then(resp=>{
+            //     console.log(`1请求结果: `, resp)
+            // });
+
+            //   getBase64FromImageUrl(v)
+
+
+
+          })
+          .catch((err) => {
+            console.log(err);
+            info.innerHTML = `解析失败: ${err}`;
+          });
+      };
+      // 以DataURL的形式读取文件:
+      reader.readAsDataURL(file);
+    });
+
+    // qrcodeParser(document.getElementById("canvas").toDataURL()).then((v) => {
+    //   console.log(v);
+    //   document.getElementById("result").innerHTML = `解析结果: ${v}`;
+    // });
+  </script>
+</body>
+
+</html>
