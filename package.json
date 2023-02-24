@@ -11,7 +11,10 @@
   },
   "dependencies": {
     "@vueuse/core": "^9.12.0",
-    "vue": "^3.2.47"
+    "lingva-scraper": "^1.1.0",
+    "node-sound": "^0.0.5",
+    "vue": "^3.2.47",
+    "vue-router": "^4.1.6"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.0.0",

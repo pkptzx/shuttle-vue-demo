@@ -31,7 +31,7 @@ cargo shuttle deploy --allow-dirty
 cargo shuttle run
 ```
 
-## 报错解决(貌似只有windows才会必须使用1.65?)
+## 报错解决(必须使用1.65)
 error:
 >error: couldn't read \\?\x:\...\target\debug\build\rustversion-...\out/version.expr: 文件名、目录名或卷标语法不正确。 (os error 123)
 
