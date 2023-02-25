@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@vueuse/core": "^9.12.0",
+    "gifler": "^0.1.0",
     "lingva-scraper": "^1.1.0",
     "node-sound": "^0.0.5",
     "vue": "^3.2.47",

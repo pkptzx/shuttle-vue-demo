@@ -19,6 +19,14 @@ const router = createRouter({
       },
       component: () => import("../views/QRDecoder.vue"),
     },
+    {
+      path: "/canvasdrawgif",
+      name: "canvasdrawgif",
+      meta: {
+        title: '绘制gif到canvas上'
+      },
+      component: () => import("../views/CanvasDrawGif.vue"),
+    },
   ],
 });
 router.beforeEach((to, from, next) => {
