@@ -3,6 +3,7 @@
   <router-link class="btn" active-class="btn-active" to="/qr" tag="button">二维码解析</router-link>
   <router-link class="btn" active-class="btn-active" to="/" tag="button">语音识别</router-link>
   <router-link class="btn" active-class="btn-active" to="/canvasdrawgif" tag="button">绘制gif到canvas上</router-link>
+  <router-link to="/docs" class="btn" active-class="btn-active" target="_blank">api doc demo</router-link>
 </div>
   <router-view></router-view>
 </template>

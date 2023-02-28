@@ -1,4 +1,4 @@
-# shuttle v0.10使用说明
+# shuttle 使用说明
 
 https://www.shuttle.rs/
 
@@ -57,7 +57,7 @@ answer in discord:
     # 安装rust 1.65
     rustup toolchain install 1.65
     # 使用1.65重新安装cargo-shuttle (或者直接binstall[未测])
-    cargo +1.65 install cargo-shuttle --force
+    cargo +1.65 install cargo-shuttle --force --target-dir F:\temp
     cargo +1.65 build
     cargo +1.65 shuttle run
     ```

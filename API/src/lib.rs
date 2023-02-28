@@ -88,7 +88,7 @@ async fn upload(mut multipart: Multipart) -> Json<HashMap<String, String>> {
             }
         }
     }
-    Json(HashMap::from([(String::from("result"), String::from("未识别出二维码,请检查后重试"))]))
+    Json(HashMap::from([(String::from("result"), String::from("未识别出二维码,请检查后重试!!!"))]))
 }
 
 #[shuttle_service::main]
@@ -139,7 +139,7 @@ fn qr_decode(buffer: &[u8]) -> Result<String> {
     let grids = img.detect_grids();
     // assert_eq!(grids.len(), 1);
     if grids.len() == 0 {
-        return Ok(String::from("未识别出二维码,请检查后重试"));
+        return Ok(String::from("未识别出二维码,请检查后重试!!!"));
     }
     // Decode the grid
     let (meta, content) = grids[0].decode()?;

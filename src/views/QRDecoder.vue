@@ -16,6 +16,7 @@
     </div>
   </div>
 </div>
+<div v-html="result"></div>
 </template>
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
@@ -23,6 +24,7 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import '//cdn.staticfile.org/sweetalert2/11.7.2/sweetalert2.all.min.js';
 let file:File|null;
 const preview = ref()
+const result = ref()
 
 onMounted(async () => {
   preview.value.focus()
@@ -113,14 +115,12 @@ function uploadPlans() {
           console.log('error')
         }
       }).then(res => {
-        console.log('res is',res);
-        const r = document.createElement('div')
+        console.log('res is',res); 
         if(res.result_origin){
-          r.innerHTML = `${res.result_origin}<br/>${res.result}`
+          result.value = `${res.result_origin}<br/>${res.result}`
         }else{
-          r.innerHTML = `${res.result}`
-        }
-        document.body.appendChild(r)
+          result.value = `${res.result}`
+        } 
       })
     }
 </script>
