@@ -1,3 +1,4 @@
+use std::sync::Mutex;
 use std::{collections::HashMap, str::FromStr};
 
 use anyhow::anyhow;
@@ -13,10 +14,17 @@ use poem::{
     web::{Json, Multipart, Path},
     EndpointExt, Request, Response, Route,
 };
+use poem_openapi::types::ToJSON;
 use poem_openapi::{param::Query, payload::PlainText, OpenApi, OpenApiService, Tags};
 use reqwest::{Body, Method};
+use serde::__private::de::IdentifierDeserializer;
 use shuttle_secrets::SecretStore;
 use tracing::{error, info};
+use translate::{InputLang, OutputLang};
+
+pub mod lang;
+pub mod translate;
+
 
 #[handler]
 fn hello_world() -> &'static str {
@@ -88,7 +96,64 @@ async fn upload(mut multipart: Multipart) -> Json<HashMap<String, String>> {
             }
         }
     }
-    Json(HashMap::from([(String::from("result"), String::from("未识别出二维码,请检查后重试!!!"))]))
+    Json(HashMap::from([(
+        String::from("result"),
+        String::from("未识别出二维码,请检查后重试!!!"),
+    )]))
+}
+
+// lazy_static! {
+//     static ref GLOBAL_STRING: RwLock<String> = RwLock::new("string".to_string());
+// }
+
+// fn main() {
+//     {
+//         let nice = GLOBAL_STRING.read().unwrap();
+//         println!("{}", *nice);
+//     }
+
+//     {
+//         let mut mystr = GLOBAL_STRING.write().unwrap();
+//         *mystr = "assign new".to_string();
+//     }
+
+//     {
+//         let nice = GLOBAL_STRING.read().unwrap();
+//         println!("{}", *nice);
+//     }
+// }
+
+lazy_static::lazy_static! {
+   pub static ref spec_yaml:String = String::new();
+   static ref spec_yaml2: Mutex<Vec<u8>> = Mutex::new(vec![]);
+}
+
+#[handler]
+async fn api_docs() -> Json<serde_json::Value> {
+    Json(serde_json::from_str(&String::from_utf8(spec_yaml2.lock().unwrap().to_vec()).unwrap()).unwrap())
+}
+
+#[handler]
+async fn translation(poem::web::Query(params): poem::web::Query<HashMap<String,String>>) -> Json<translate::TranslateResult> {
+    let txt = params.get("txt").expect("txt必传");
+    let to = params.get("to");
+    info!("txt: {} to: {:?}",txt,to);
+    match to {
+        Some(t)=>{
+               Json(translate::translate(vec![txt.to_owned()], InputLang::Auto, t).await.unwrap())
+        },
+        None =>{
+            Json(translate::translate(vec![txt.to_owned()], InputLang::Auto, OutputLang::SimplifiedChinese).await.unwrap())
+        }
+    }
+
+    // let t = translate::translate_one_line(txt, InputLang::Auto, OutputLang::SimplifiedChinese).await;
+    // let r =  match t {
+    //     Ok(r1) => r1,
+    //     Err(r2) => r2,
+    // };
+    // r
+    // format!("txt: {} to: {}",txt,to)
 }
 
 #[shuttle_service::main]
@@ -103,19 +168,28 @@ async fn main(
     };
     info!("token: {token}");
 
-    let api_service =
-        OpenApiService::new(Api, "Hello World", "1.0").server("https://myqr.shuttleapp.rs/api");
+    let api_service = OpenApiService::new(Api, "Hello World", "1.0")
+        .server("https://myqr.shuttleapp.rs/api")
+        .server("http://127.0.0.1:8000/api");
     let ui = api_service.swagger_ui();
+    // println!("{}",api_service.spec_yaml());
+    spec_yaml2
+        .lock()
+        .unwrap()
+        .append(api_service.spec().into_bytes().as_mut());
 
     let app = Route::new()
         .nest(
             "/",
             StaticFilesEndpoint::new(public_folder).index_file("index.html"),
         )
-        .nest("/api", api_service)
+        .nest("/api", api_service.with(poem::middleware::Cors::new()))
         .nest("/docs", ui)
+        .at("/v3/api-docs/swagger-config", get(api_docs).with(poem::middleware::Cors::new()))
+        .at("/v2/api-docs", get(api_docs).with(poem::middleware::Cors::new()))
         .at("/hello", get(hello_world))
         .at("/upload", post(upload))
+        .at("/translate", get(translation).with(poem::middleware::Cors::new()))
         .catch_error(|_: NotFoundError| async move {
             Response::builder()
                 .status(StatusCode::NOT_FOUND)
@@ -167,3 +241,4 @@ async fn qr_decode_by_url(qrcode_url: &str) -> Result<String> {
     }
     Ok(String::new())
 }
+

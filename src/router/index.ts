@@ -4,7 +4,7 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: "/",
+      path: "/speechrecognition",
       name: "SpeechRecognition",
       meta: {
         title: '语音识别'
@@ -12,7 +12,7 @@ const router = createRouter({
       component: () => import("../views/SpeechRecognition.vue"),
     },
     {
-      path: "/qr",
+      path: "/",
       name: "qr",
       meta: {
         title: '二维码解析'

@@ -12,11 +12,11 @@
     <h2 class="card-title">解析二维码</h2>
     <p>如果二维码中是一个URL那么将会返回请求URL后的结果</p>
     <div class="card-actions justify-end">
-      <button class="btn btn-primary"  @click="uploadPlans">上传并解析</button>
+      <button class="btn btn-primary" @click="uploadPlans">上传并解析</button>
     </div>
   </div>
 </div>
-<div v-html="result"></div>
+<div v-for="r in result" :key="r">{{ r }}</div>
 </template>
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
@@ -24,7 +24,7 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import '//cdn.staticfile.org/sweetalert2/11.7.2/sweetalert2.all.min.js';
 let file:File|null;
 const preview = ref()
-const result = ref()
+const result = ref<Array<string>>([])
 
 onMounted(async () => {
   preview.value.focus()
@@ -117,9 +117,10 @@ function uploadPlans() {
       }).then(res => {
         console.log('res is',res); 
         if(res.result_origin){
-          result.value = `${res.result_origin}<br/>${res.result}`
+          result.value.push(`二维码内容1: ${res.result_origin}`);
+          result.value.push(`二维码内容2: ${res.result}`);
         }else{
-          result.value = `${res.result}`
+          result.value.push(`二维码内容: ${res.result}`);
         } 
       })
     }

@@ -2,11 +2,16 @@
   <div class="subtitles-renderer" style="color:white;">
     {{ subtitles }}
   </div>
+  <br />
+  <div class="subtitles-renderer" style="color:grey;">
+    {{ translate }}
+  </div>
 </template>
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, reactive, watch } from "vue";
-import { useSpeechRecognition } from '@vueuse/core'
+import { useSpeechRecognition,watchThrottled  } from '@vueuse/core'
 const subtitles = ref('请允许浏览器弹出的使用麦克风,请使用Edge浏览器')
+const translate = ref('')
 const speech = useSpeechRecognition({
   lang: 'zh-CN',
   interimResults: true,
@@ -59,7 +64,22 @@ async function startSpeechRecognition() {
     }
   })
 }
+
+watchThrottled(
+  subtitles,
+  () => {fetch(`https://myqr.shuttleapp.rs/translate?txt=${encodeURIComponent(subtitles.value)}&to=en`).then(txt => {
+      return txt.json()
+    }).then(t => {
+      translate.value = t.output_text.map((x: any[])=>x[0]).join(' ')
+      return;
+    });    
+    console.log('changed!') },
+  { throttle: 5000 },
+)
+
 startSpeechRecognition()
+
+
 </script>
 <style scoped>
 .subtitles-renderer {
