@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use anyhow::{Result, Ok};
 use qr::translate::{InputLang, OutputLang};
 
@@ -13,23 +11,14 @@ pub enum TST {
 }
 #[tokio::main]
 async fn main() -> Result<()> {
-    let inLang:InputLang = "zh-CN".into();
-println!("{:?}",inLang);
-let outlang:OutputLang = "zh-CN".into();
-println!("{:?}",outlang);
-let outlang:OutputLang = "ja".into();
-println!("{:?}",outlang.to_string());
+    let in_lang:InputLang = "zh-CN".into();
+println!("{:?}",in_lang);
+let out_lang:OutputLang = "zh-CN".into();
+println!("{:?}",out_lang);
+let out_lang:OutputLang = "ja".into();
+println!("{:?}",out_lang.to_string());
 // let s = qr::translate::translate_one_line("hi".to_string(), InputLang::Auto, OutputLang::SimplifiedChinese).await;
 // println!("{}",s.unwrap());
-
-let s = "striNgsx";
-let k = match &*caseless::default_case_fold_str(s) {
-    "str-ing1" => TST::ONE,
-   "striNgsx" => TST::TWO,
-    "string-3" | "else" => TST::THREE,
-    _ => TST::default(),
-};
-println!("------k: {:?}",k);
 
 let l:TST = "s-1".into();
 println!("test: {:?}",l);
@@ -41,10 +30,10 @@ Ok(())
 impl Into<TST> for &str {
     fn into(self) -> TST {
         println!("into: {}",self);
-        // let data = self.to_lowercase();
+        let data = self.to_lowercase();
         // let data = self;
-        match &*caseless::default_case_fold_str(self) {
-            // match self {
+        // match &*caseless::default_case_fold_str(self) {
+            match data.as_str() {
             "S-1" => TST::ONE,
             "S-2" => TST::TWO,
             "s-3" => TST::THREE,
