@@ -17,7 +17,7 @@ pub struct TranslateResult {
 
 
 pub use super::lang::{InputLang, OutputLang};
-use tracing::{error, info,debug};
+use tracing::{debug};
 
 /// translate.google.com에서 사용하는 발송 쿼리문을 생성한다.
 /// Hello\\\\nHello\\nHow Are You

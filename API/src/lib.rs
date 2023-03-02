@@ -1,5 +1,5 @@
+use std::collections::HashMap;
 use std::sync::Mutex;
-use std::{collections::HashMap, str::FromStr};
 
 use anyhow::anyhow;
 use anyhow::Result;
@@ -8,23 +8,18 @@ use poem::{
     error::NotFoundError,
     get, handler,
     http::StatusCode,
-    listener::TcpListener,
     post,
-    web::Html,
-    web::{Json, Multipart, Path},
-    EndpointExt, Request, Response, Route,
+    web::{Json, Multipart},
+    EndpointExt, Response, Route,
 };
-use poem_openapi::types::ToJSON;
-use poem_openapi::{param::Query, payload::PlainText, OpenApi, OpenApiService, Tags};
-use reqwest::{Body, Method};
-use serde::__private::de::IdentifierDeserializer;
+use poem_openapi::{payload::PlainText, OpenApi, OpenApiService, Tags};
+use reqwest;
 use shuttle_secrets::SecretStore;
-use tracing::{error, info};
+use tracing::info;
 use translate::{InputLang, OutputLang};
 
 pub mod lang;
 pub mod translate;
-
 
 #[handler]
 fn hello_world() -> &'static str {
@@ -45,7 +40,7 @@ impl Api {
     async fn index(
         &self,
         /// 这是一个参数说明
-        name: Query<Option<String>>,
+        name: poem_openapi::param::Query<Option<String> >,
     ) -> PlainText<String> {
         // 额 , name.clone() 返回的是 name.0 的副本
         let txt = name.clone().unwrap_or("None".to_string());
@@ -124,27 +119,39 @@ async fn upload(mut multipart: Multipart) -> Json<HashMap<String, String>> {
 // }
 
 lazy_static::lazy_static! {
-   pub static ref spec_yaml:String = String::new();
-   static ref spec_yaml2: Mutex<Vec<u8>> = Mutex::new(vec![]);
+   static ref SPEC_JSON: Mutex<Vec<u8>> = Mutex::new(vec![]);
 }
 
 #[handler]
 async fn api_docs() -> Json<serde_json::Value> {
-    Json(serde_json::from_str(&String::from_utf8(spec_yaml2.lock().unwrap().to_vec()).unwrap()).unwrap())
+    Json(
+        serde_json::from_str(&String::from_utf8(SPEC_JSON.lock().unwrap().to_vec()).unwrap())
+            .unwrap(),
+    )
 }
 
 #[handler]
-async fn translation(poem::web::Query(params): poem::web::Query<HashMap<String,String>>) -> Json<translate::TranslateResult> {
+async fn translation(
+    poem::web::Query(params): poem::web::Query<HashMap<String, String>>,
+) -> Json<translate::TranslateResult> {
     let txt = params.get("txt").expect("txt必传");
     let to = params.get("to");
-    info!("txt: {} to: {:?}",txt,to);
+    info!("txt: {} to: {:?}", txt, to);
     match to {
-        Some(t)=>{
-               Json(translate::translate(vec![txt.to_owned()], InputLang::Auto, t).await.unwrap())
-        },
-        None =>{
-            Json(translate::translate(vec![txt.to_owned()], InputLang::Auto, OutputLang::SimplifiedChinese).await.unwrap())
-        }
+        Some(t) => Json(
+            translate::translate(vec![txt.to_owned()], InputLang::Auto, t)
+                .await
+                .unwrap(),
+        ),
+        None => Json(
+            translate::translate(
+                vec![txt.to_owned()],
+                InputLang::Auto,
+                OutputLang::SimplifiedChinese,
+            )
+            .await
+            .unwrap(),
+        ),
     }
 
     // let t = translate::translate_one_line(txt, InputLang::Auto, OutputLang::SimplifiedChinese).await;
@@ -172,8 +179,8 @@ async fn main(
         .server("https://myqr.shuttleapp.rs/api")
         .server("http://127.0.0.1:8000/api");
     let ui = api_service.swagger_ui();
-    // println!("{}",api_service.spec_yaml());
-    spec_yaml2
+    // println!("{}",api_service.SPEC_YAMLl());
+    SPEC_JSON
         .lock()
         .unwrap()
         .append(api_service.spec().into_bytes().as_mut());
@@ -185,11 +192,20 @@ async fn main(
         )
         .nest("/api", api_service.with(poem::middleware::Cors::new()))
         .nest("/docs", ui)
-        .at("/v3/api-docs/swagger-config", get(api_docs).with(poem::middleware::Cors::new()))
-        .at("/v2/api-docs", get(api_docs).with(poem::middleware::Cors::new()))
+        .at(
+            "/v3/api-docs/swagger-config",
+            get(api_docs).with(poem::middleware::Cors::new()),
+        )
+        .at(
+            "/v2/api-docs",
+            get(api_docs).with(poem::middleware::Cors::new()),
+        )
         .at("/hello", get(hello_world))
         .at("/upload", post(upload))
-        .at("/translate", get(translation).with(poem::middleware::Cors::new()))
+        .at(
+            "/translate",
+            get(translation).with(poem::middleware::Cors::new()),
+        )
         .catch_error(|_: NotFoundError| async move {
             Response::builder()
                 .status(StatusCode::NOT_FOUND)
@@ -241,4 +257,3 @@ async fn qr_decode_by_url(qrcode_url: &str) -> Result<String> {
     }
     Ok(String::new())
 }
-
