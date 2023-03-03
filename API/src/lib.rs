@@ -17,7 +17,7 @@ use reqwest;
 use shuttle_secrets::SecretStore;
 use tracing::info;
 use translate::{InputLang, OutputLang};
-
+use regex::Regex;
 pub mod lang;
 pub mod translate;
 
@@ -163,6 +163,38 @@ async fn translation(
     // format!("txt: {} to: {}",txt,to)
 }
 
+#[handler]
+async fn get_bili_video_info( poem::web::Query(params): poem::web::Query<HashMap<String, String>>) -> Json<HashMap<&'static str,serde_json::Value>> {
+    let bvid = params.get("bvid").expect("bvid必传");
+    let client = reqwest::ClientBuilder::new().build().unwrap();
+    let resp = client.get(format!("https://www.bilibili.com/video/{}/",bvid)).send().await.unwrap();
+    
+    let mut result: HashMap<&'static str, serde_json::Value> = HashMap::new();
+    let rtxt = resp.text().await.unwrap();
+    let re_subtitle = Regex::new(r#""subtitle_url":"(.+?)""#).unwrap();
+    let mut urls = vec![];
+    for cap in re_subtitle.captures_iter(&rtxt) {
+        urls.push(cap[1].replace("\\u002F", "/"));
+    }
+    result.insert("subtitle", serde_json::Value::from(urls));
+
+    let re_audio = Regex::new(r#""audio":\[\{"id":.+?,"baseUrl":"(.+?)","base_url":"(.+?)""#).unwrap();
+    let mut urls = vec![];
+    for cap in re_audio.captures_iter(&rtxt) {
+        urls.push(cap[1].replace("\\u002F", "/"));
+        urls.push(cap[2].replace("\\u002F", "/"));
+    }
+    result.insert("audio", serde_json::Value::from(urls));
+
+    let re_ids = Regex::new(r#""aid":(\d+),"bvid":"([^"]+?)","cid":(\d+)"#).unwrap();
+    for cap in re_ids.captures_iter(&rtxt) {
+        result.insert("aid", serde_json::Value::from(cap[1].to_string()));
+        result.insert("bvid", serde_json::Value::from(cap[2].to_string()));
+        result.insert("cid", serde_json::Value::from(cap[3].to_string()));
+    }
+    Json(result)
+}
+
 #[shuttle_service::main]
 async fn main(
     #[shuttle_static_folder::StaticFolder(folder = "public")] public_folder: std::path::PathBuf,
@@ -205,7 +237,7 @@ async fn main(
         .at(
             "/translate",
             get(translation).with(poem::middleware::Cors::new()),
-        )
+        ).at("/bili_video_info", get(get_bili_video_info).with(poem::middleware::Cors::new()))
         .catch_error(|_: NotFoundError| async move {
             Response::builder()
                 .status(StatusCode::NOT_FOUND)
@@ -257,3 +289,4 @@ async fn qr_decode_by_url(qrcode_url: &str) -> Result<String> {
     }
     Ok(String::new())
 }
+

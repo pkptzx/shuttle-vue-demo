@@ -22,3 +22,4 @@ reqwest = { version = "0.11.14", features = ["json", "multipart", "stream", "gzi
 lazy_static = "1.4.0"
 json = "0.12.4"
 tokio = "1.22"
+regex = "1.7.1"

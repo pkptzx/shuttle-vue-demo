@@ -12,11 +12,11 @@
     <h2 class="card-title">解析二维码</h2>
     <p>如果二维码中是一个URL那么将会返回请求URL后的结果</p>
     <div class="card-actions justify-end">
-      <button class="btn btn-primary" @click="uploadPlans">上传并解析</button>
+      <button class="btn btn-primary" :class="{'loading' : loading}" :disabled="loading" @click="uploadPlans">上传并解析</button>
     </div>
   </div>
 </div>
-<div v-for="r in result" :key="r">{{ r }}</div>
+<div v-for="r in result" :key="r" style="overflow-wrap: anywhere;">{{ r }}</div>
 </template>
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
@@ -25,6 +25,7 @@ import '//cdn.staticfile.org/sweetalert2/11.7.2/sweetalert2.all.min.js';
 let file:File|null;
 const preview = ref()
 const result = ref<Array<string>>([])
+const loading = ref(false)
 
 onMounted(async () => {
   preview.value.focus()
@@ -90,7 +91,8 @@ function uploadPlans() {
         })
         return;
       }
-      // loading = true;
+      result.value = []
+      loading.value = true;
       const form = new FormData();
       form.append("file", file);
       // form.append("type", this.type);
@@ -101,6 +103,7 @@ function uploadPlans() {
         //   'Content-Type': 'multipart/form-data'
         // }
       }).then(res => {
+        loading.value = false;
         if(res.ok) {
           console.log('success')
           return res.json();
