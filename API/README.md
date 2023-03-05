@@ -71,5 +71,7 @@ answer in discord:
     重启这个项目:    
     ```shell
     cargo shuttle project rm
-    cargo shuttle project new
+    cargo shuttle project new --idle-minutes 0
     ```
+3. shuttle升级后默认30分钟后进入休眠
+   cargo shuttle project new --idle-minutes 0 禁用休眠
