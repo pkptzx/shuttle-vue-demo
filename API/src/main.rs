@@ -195,11 +195,11 @@ async fn get_bili_video_info( poem::web::Query(params): poem::web::Query<HashMap
     Json(result)
 }
 
-#[shuttle_service::main]
-async fn main(
+#[shuttle_runtime::main]
+async fn poem(
     #[shuttle_static_folder::StaticFolder(folder = "public")] public_folder: std::path::PathBuf,
     #[shuttle_secrets::Secrets] secret_store: SecretStore,
-) -> shuttle_service::ShuttlePoem<impl poem::Endpoint> {
+) -> shuttle_poem::ShuttlePoem<impl poem::Endpoint> {
     let token = if let Some(token) = secret_store.get("XXX_TOKEN") {
         token
     } else {
@@ -245,7 +245,7 @@ async fn main(
                 .body("404 <span style=\"color:red\">NOT_FOUND</span>!")
         });
 
-    Ok(app)
+    Ok(app.into())
 }
 
 /**
