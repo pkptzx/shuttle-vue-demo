@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::sync::Mutex;
 
 use anyhow::anyhow;
@@ -13,11 +14,13 @@ use poem::{
     EndpointExt, Response, Route,
 };
 use poem_openapi::{payload::PlainText, OpenApi, OpenApiService, Tags};
+use regex::Regex;
 use reqwest;
+use reqwest::cookie::Jar;
+use reqwest::Url;
 use shuttle_secrets::SecretStore;
 use tracing::info;
 use translate::{InputLang, OutputLang};
-use regex::Regex;
 pub mod lang;
 pub mod translate;
 
@@ -40,7 +43,7 @@ impl Api {
     async fn index(
         &self,
         /// 这是一个参数说明
-        name: poem_openapi::param::Query<Option<String> >,
+        name: poem_openapi::param::Query<Option<String>>,
     ) -> PlainText<String> {
         // 额 , name.clone() 返回的是 name.0 的副本
         let txt = name.clone().unwrap_or("None".to_string());
@@ -164,11 +167,17 @@ async fn translation(
 }
 
 #[handler]
-async fn get_bili_video_info( poem::web::Query(params): poem::web::Query<HashMap<String, String>>) -> Json<HashMap<&'static str,serde_json::Value>> {
+async fn get_bili_video_info(
+    poem::web::Query(params): poem::web::Query<HashMap<String, String>>,
+) -> Json<HashMap<&'static str, serde_json::Value>> {
     let bvid = params.get("bvid").expect("bvid必传");
     let client = reqwest::ClientBuilder::new().build().unwrap();
-    let resp = client.get(format!("https://www.bilibili.com/video/{}/",bvid)).send().await.unwrap();
-    
+    let resp = client
+        .get(format!("https://www.bilibili.com/video/{}/", bvid))
+        .send()
+        .await
+        .unwrap();
+
     let mut result: HashMap<&'static str, serde_json::Value> = HashMap::new();
     let rtxt = resp.text().await.unwrap();
     let re_subtitle = Regex::new(r#""subtitle_url":"(.+?)""#).unwrap();
@@ -178,7 +187,17 @@ async fn get_bili_video_info( poem::web::Query(params): poem::web::Query<HashMap
     }
     result.insert("subtitle", serde_json::Value::from(urls));
 
-    let re_audio = Regex::new(r#""audio":\[\{"id":.+?,"baseUrl":"(.+?)","base_url":"(.+?)""#).unwrap();
+    let re_video =
+        Regex::new(r#""video":\[\{"id":.+?,"baseUrl":"(.+?)","base_url":"(.+?)""#).unwrap();
+    let mut urls = vec![];
+    for cap in re_video.captures_iter(&rtxt) {
+        urls.push(cap[1].replace("\\u002F", "/"));
+        urls.push(cap[2].replace("\\u002F", "/"));
+    }
+    result.insert("video", serde_json::Value::from(urls));
+
+    let re_audio =
+        Regex::new(r#""audio":\[\{"id":.+?,"baseUrl":"(.+?)","base_url":"(.+?)""#).unwrap();
     let mut urls = vec![];
     for cap in re_audio.captures_iter(&rtxt) {
         urls.push(cap[1].replace("\\u002F", "/"));
@@ -237,7 +256,15 @@ async fn poem(
         .at(
             "/translate",
             get(translation).with(poem::middleware::Cors::new()),
-        ).at("/bili_video_info", get(get_bili_video_info).with(poem::middleware::Cors::new()))
+        )
+        .at(
+            "/bili_video_info",
+            get(get_bili_video_info).with(poem::middleware::Cors::new()),
+        )
+        .at(
+            "/bili_video_url",
+            get(get_bili_video_url).with(poem::middleware::Cors::new()),
+        )
         .catch_error(|_: NotFoundError| async move {
             Response::builder()
                 .status(StatusCode::NOT_FOUND)
@@ -290,3 +317,50 @@ async fn qr_decode_by_url(qrcode_url: &str) -> Result<String> {
     Ok(String::new())
 }
 
+#[handler]
+async fn get_bili_video_url(
+    poem::web::Query(params): poem::web::Query<HashMap<String, String>>,
+) -> String {
+    let bvid = params.get("bvid").expect("bvid必传");
+    let client = reqwest::ClientBuilder::new().build().unwrap();
+    let resp = client
+        .get(format!(
+            "https://api.bilibili.com/x/player/pagelist?bvid={bvid}"
+        ))
+        .send()
+        .await
+        .unwrap();
+    println!("{:?}", resp.headers());
+    let bs = resp.json::<serde_json::Value>().await.unwrap();
+    println!("pagelist: {bs}");
+    let success = &bs["code"].as_i64().unwrap();
+    if *success == 0i64 {
+        let cid = &bs["data"][0]["cid"];
+        println!("{}", cid.as_i64().unwrap());
+        let cid = cid.as_i64().unwrap().to_string();
+        // 获取视频地址
+        let url = format!("https://api.bilibili.com/x/player/playurl?bvid={bvid}&cid={cid}&qn=80&fnval=1&fnver=0&fourk=1&high_quality=1&platform=html5").parse::<Url>().unwrap();
+        let cookie = "SESSDATA=ccaf6e65%2C1701286775%2C1e59a%2A62;";
+        let jar = Jar::default();
+        jar.add_cookie_str(cookie, &url);
+        let client = reqwest::ClientBuilder::new()
+            .cookie_provider(Arc::new(jar))
+            .build()
+            .unwrap();
+        let resp = client.get(url).send().await.unwrap();
+        let rjson = resp.json::<serde_json::Value>().await.unwrap();
+        let success = &bs["code"].as_i64().unwrap();
+        if *success == 0i64 {
+            println!("playurl: {rjson}");
+            let playurl = &rjson["data"]["durl"][0]["url"]
+                .as_str()
+                .unwrap()
+                .to_string();
+            return playurl.to_string();
+        } else {
+            return "not found playurl, please check bvid!".to_string();
+        }
+    } else {
+        return "not found video info, please check bvid!".to_string();
+    }
+}
