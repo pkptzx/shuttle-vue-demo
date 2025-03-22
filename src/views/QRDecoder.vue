@@ -21,7 +21,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
 //@ts-ignore
-import '//cdn.staticfile.org/sweetalert2/11.7.2/sweetalert2.all.min.js';
+import '//cdn.staticfile.net/sweetalert2/11.7.2/sweetalert2.all.min.js';
 let file:File|null;
 const preview = ref()
 const result = ref<Array<string>>([])

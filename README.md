@@ -11,3 +11,13 @@ swagger doc example https://myqr.shuttleapp.rs/docs
 
 run local :
 D:\rustproject\qr\API\target\release\qr.exe --port 80 --storage-manager-type working-dir  --storage-manager-path d:\rustprojet\qr\API
+
+cargo shuttle run --external --port 8123
+
+
+cargo shuttle project restart --idle-minutes 0 --working-directory ./API
+
+cargo shuttle deploy --working-directory ./API --allow-dirty --no-test
+
+
+ --allow-dirty

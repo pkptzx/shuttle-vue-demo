@@ -1,2 +1,5 @@
 /target
 public/
+Secrets.toml
+.shuttle*
+Secrets*.toml

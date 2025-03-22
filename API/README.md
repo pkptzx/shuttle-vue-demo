@@ -44,3 +44,6 @@ cargo shuttle run
     ```
 3. shuttle升级后默认30分钟后进入休眠
    cargo shuttle project new --idle-minutes 0 禁用休眠
+
+cargo shuttle project restart --idle-minutes 0
+cargo shuttle deploy --allow-dirty --no-test --working-directory ./API
