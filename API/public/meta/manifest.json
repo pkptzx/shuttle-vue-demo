@@ -1,0 +1,57 @@
+{
+    "short_name": "ShuttleDemo",
+    "name": "Shuttle demo",
+    "icons": [
+      {
+        "src": "/meta/16x16.png",
+        "type": "image/png",
+        "sizes": "16x16"
+      },
+      {
+        "src": "/meta/32x32.png",
+        "type": "image/png",
+        "sizes": "32x32"
+      },
+      {
+        "src": "/meta/128x128.png",
+        "type": "image/png",
+        "sizes": "128x128"
+      },
+      {
+        "src": "/meta/142x142.png",
+        "type": "image/png",
+        "sizes": "142x142"
+      },
+      {
+        "src": "/meta/128x128@2x.png",
+        "type": "image/png",
+        "sizes": "256x256",
+        "purpose": "any maskable"
+      }
+    ],
+    "start_url": "/",
+    "background_color": "#0F0F0F",
+    "display": "standalone",
+    "display_override": ["fullscreen", "minimal-ui"],
+    "scope": "/",
+    "theme_color": "#0F0F0F",
+    "description": "Build smaller, faster, and more secure desktop applications with a web frontend",
+    "screenshots": [
+      {
+        "src": "/img/shortcut.png",
+        "type": "image/png",
+        "sizes": "1280x640"
+      }
+    ],
+    "categories": ["documentation", "qrcode", "translate","demo"],
+    "orientation": "portrait",
+    "dir": "ltr",
+    "lang": "zh-CN",
+    "related_applications": [
+      {
+        "platform": "webapp",
+        "url": "https://myqr.shuttleapp.rs/meta/manifest.json"
+      }
+    ]
+  }
+  
