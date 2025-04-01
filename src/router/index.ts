@@ -27,6 +27,14 @@ const router = createRouter({
       },
       component: () => import("../views/CanvasDrawGif.vue"),
     },
+    {
+      path: "/navigation",
+      name: "navigation",
+      meta: {
+        title: '网站收藏'
+      },
+      component: () => import("../views/WebNavigation.vue"),
+    },
   ],
 });
 router.beforeEach((to, from, next) => {
