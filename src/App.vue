@@ -4,6 +4,7 @@
   <router-link class="btn" active-class="btn-active" to="/speechrecognition" tag="button">语音识别</router-link>
   <router-link class="btn" active-class="btn-active" to="/canvasdrawgif" tag="button">绘制gif到canvas上</router-link>
   <router-link to="/docs" class="btn" active-class="btn-active" target="_blank">api doc demo</router-link>
+  <router-link to="/navigation" class="btn" active-class="btn-active" tag="button">网址导航</router-link>
 </div>
   <router-view></router-view>
 </template>
