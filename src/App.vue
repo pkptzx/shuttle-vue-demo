@@ -12,6 +12,6 @@
 
 </script>
 <style>
-@import url('https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/tailwindcss/2.2.19/tailwind.min.css');
-@import "https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/daisyui/2.2.2/full.min.css";
+@import url('https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css');
+@import "https://cdnjs.cloudflare.com/ajax/libs/daisyui/2.2.2/full.min.css";
 </style>
