@@ -6,15 +6,16 @@ publish = false
 
 [dependencies]
 # ,features = ["static-files"]
-poem = { version ="3.0.3",features = ["static-files"]}
-poem-openapi = { version = "5.0.3", features = ["swagger-ui"]}
+poem = { version ="3.1.12",features = ["static-files"]}
+poem-openapi = { version = "5.1.16", features = ["swagger-ui"]}
 # shuttle-service = "0.47.0"
-shuttle-poem = "0.53.0"
-shuttle-runtime = "0.53.0"
-image = "0.24"
-rqrr = "0.6"
-anyhow = "1.0.70"
-tracing = "0.1.37"
+shuttle-poem = "0.57"
+shuttle-runtime = "0.57"
+image = "0.25.8"
+rqrr = "0.10.0"
+anyhow = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3.9", features = ["env-filter"] }
 serde = {version = "1", features = ["derive"] }
 serde_json = "1"
 reqwest = { version = "0", features = ["json", "multipart", "stream", "gzip", "deflate", "brotli","cookies"] }
@@ -22,5 +23,8 @@ lazy_static = "1.4.0"
 json = "0.12.4"
 tokio = "1.26.0"
 regex = "1"
-encoding_rs = "0.8.33"
-async-trait = "0.1.56"
+encoding_rs = "0"
+async-trait = "0.1"
+
+siumai = { version = "0.10", features = ["openai"] }
+notion-client = "1.0.10"

@@ -1,7 +1,6 @@
 <template>
   <main class="min-h-screen bg-background">
     <div class="mx-auto max-w-screen-2xl">
-      <!-- Header -->
       <header class="border-b p-4 flex items-center justify-between">
         <h1 class="text-2xl font-bold">My Navigation</h1>
         <div class="flex items-center gap-2">
@@ -20,10 +19,8 @@
         </div>
       </header>
       
-      <!-- Search Bar -->
       <div class="p-4 border-b">
         <div class="w-full max-w-3xl mx-auto">
-          <!-- Bookmark Search -->
           <div class="relative">
             <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
             <input 
@@ -42,7 +39,6 @@
         </div>
       </div>
       
-      <!-- Search Results Summary (when searching) -->
       <div v-if="searchQuery" class="px-4 py-2 bg-muted border-b">
         <div class="max-w-3xl mx-auto">
           <p v-if="totalResults > 0" class="text-sm">
@@ -54,9 +50,7 @@
         </div>
       </div>
       
-      <!-- Main Navigation -->
       <div class="flex h-[calc(100vh-132px)]" :class="{ 'h-[calc(100vh-164px)]': searchQuery }">
-        <!-- Mobile menu button -->
         <div class="md:hidden p-4">
           <button 
             @click="isMobileMenuOpen = true"
@@ -66,12 +60,11 @@
             <span class="sr-only">Toggle category menu</span>
           </button>
           
-          <!-- Mobile menu drawer -->
           <Teleport to="body">
             <div v-if="isMobileMenuOpen" class="fixed inset-0 z-50 bg-black/80" @click="isMobileMenuOpen = false"></div>
             <div 
               v-if="isMobileMenuOpen" 
-              class="fixed inset-y-0 left-0 z-50 w-[240px] bg-background p-0 shadow-lg"
+              class="fixed inset-y-0 left-0 z-50 sidebar bg-background p-0 shadow-lg"
             >
               <div class="py-4">
                 <h2 class="px-4 text-lg font-semibold mb-2">Categories</h2>
@@ -100,8 +93,7 @@
           </Teleport>
         </div>
         
-        <!-- Desktop sidebar -->
-        <div class="hidden md:block w-[240px] border-r">
+        <div class="hidden md:block sidebar border-r">
           <div class="py-4">
             <h2 class="px-4 text-lg font-semibold mb-2">Categories</h2>
             <div class="h-[calc(100vh-132px)] overflow-auto" :class="{ 'h-[calc(100vh-164px)]': searchQuery }">
@@ -127,7 +119,6 @@
           </div>
         </div>
         
-        <!-- Content area - shows all categories -->
         <div 
           ref="contentRef"
           class="flex-1 p-4 overflow-auto"
@@ -152,8 +143,7 @@
             <div 
               v-for="category in filteredCategories"
               :key="category.id"
-              :ref="el => { if(el) categoryRefs[category.id] = el as HTMLElement | null }"
-              :id="category.id"
+              :data-category="category.id"
               v-show="category.filteredBookmarks.length > 0"
             >
               <div class="space-y-3">
@@ -190,7 +180,6 @@
       </div>
     </div>
     
-    <!-- Custom tooltip -->
     <div 
       v-if="showTooltip" 
       class="tooltip fixed z-50 p-2 bg-popover text-popover-foreground text-xs rounded shadow-md max-w-xs"
@@ -202,26 +191,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick, watch, onUnmounted, type Ref } from 'vue'
+// @ts-nocheck
+import { ref, onMounted, computed, nextTick, watch, onUnmounted } from 'vue'
 import { Clock, FileSearch, Menu, Moon, Search, Sun, X } from 'lucide-vue-next'
 
-// 定义类型
-interface Bookmark {
-  name: string
-  url: string
-  icon: string
-  description?: string
-}
-
-interface Category {
-  id: string
-  name: string
-  bookmarks: Bookmark[]
-  filteredBookmarks: Bookmark[]
-}
-
 // Theme handling
-const theme = ref<'light' | 'dark'>(localStorage.getItem('theme') as 'light' | 'dark' || 'light')
+const theme = ref(localStorage.getItem('theme') || 'light')
 const toggleTheme = () => {
   theme.value = theme.value === 'light' ? 'dark' : 'light'
   localStorage.setItem('theme', theme.value)
@@ -232,30 +207,28 @@ const toggleTheme = () => {
   }
 }
 
-// 初始化主题
+// Initialize theme
 onMounted(() => {
-  if (theme.value === 'dark' 
-    //  || (theme.value === 'system' && 
-    //    window.matchMedia('(prefers-color-scheme: dark)').matches)
-    ) 
-       {
+  if (theme.value === 'dark' || 
+      (theme.value === 'system' && 
+       window.matchMedia('(prefers-color-scheme: dark)').matches)) {
     document.documentElement.classList.add('dark')
   }
   
-  // 设置自定义工具提示的事件监听
+  // Set up event listeners for custom tooltip
   document.addEventListener('mouseover', handleMouseOver)
   document.addEventListener('mouseout', handleMouseOut)
   document.addEventListener('mousemove', handleMouseMove)
 })
 
 onUnmounted(() => {
-  // 清理事件监听
+  // Clean up event listeners
   document.removeEventListener('mouseover', handleMouseOver)
   document.removeEventListener('mouseout', handleMouseOut)
   document.removeEventListener('mousemove', handleMouseMove)
 })
 
-// 日期和时间
+// Date and time
 const currentDate = computed(() => {
   return new Date().toLocaleDateString()
 })
@@ -263,22 +236,62 @@ const currentTime = computed(() => {
   return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 })
 
-// 移动端菜单状态
+// Mobile menu state
 const isMobileMenuOpen = ref(false)
 
-// 搜索功能
+// Search functionality
 const searchQuery = ref('')
 const clearSearch = () => {
   searchQuery.value = ''
 }
 
-// 自定义工具提示
+// Custom tooltip functionality
 const showTooltip = ref(false)
 const tooltipContent = ref('')
 const tooltipStyle = ref({
   top: '0px',
   left: '0px'
 })
+
+const handleMouseOver = (event) => {
+  // Check if the target is a description element
+  if (event.target.classList.contains('description-text') || 
+      event.target.parentElement?.classList.contains('description-text')) {
+    const descriptionEl = event.target.classList.contains('description-text') ? 
+      event.target : event.target.parentElement
+    
+    // Only show tooltip if the text is truncated (overflowing)
+    if (descriptionEl.scrollHeight > descriptionEl.clientHeight) {
+      tooltipContent.value = descriptionEl.getAttribute('title')
+      showTooltip.value = true
+      
+      // Position the tooltip
+      updateTooltipPosition(event)
+    }
+  }
+}
+
+const handleMouseOut = (event) => {
+  if (event.target.classList.contains('description-text') || 
+      event.target.parentElement?.classList.contains('description-text')) {
+    showTooltip.value = false
+  }
+}
+
+const handleMouseMove = (event) => {
+  if (showTooltip.value) {
+    updateTooltipPosition(event)
+  }
+}
+
+const updateTooltipPosition = (event) => {
+  // Position the tooltip near the cursor
+  const offset = 15 // Distance from cursor
+  tooltipStyle.value = {
+    top: `${event.clientY + offset}px`,
+    left: `${event.clientX + offset}px`
+  }
+}
 
 // 书签数据（保持原内容不变）
 const bookmarkData = {
@@ -392,37 +405,38 @@ const bookmarkData = {
     { name: "后台管理系统", url: "http://vmms.ourvend.com:83/YSTemplet/index#", icon: "🖥️", description: "企业后台管理系统模板" },
     { name: "Free shadowsocks", url: "https://free.gyteng.com/", icon: "🔑", description: "提供免费shadowsocks服务的网站" },
     { name: "串口液晶论坛", url: "http://bbs.feelelec.cn", icon: "💻", description: "Powered by FeelElec，专注串口液晶技术讨论" },
-    { name: "码魂", url: "https://stats.uptimerobot.com/qHojtzLD1g", icon: "👨‍💻", description: "程序员技术博客和资源站" },
-    { name: "pkptzx – Code::Stats", url: "https://codestats.net/users/pkptzx", icon: "📊", description: "代码统计服务，记录编程活动" },
+    { name: "网站状态监控", url: "https://stats.uptimerobot.com/qHojtzLD1g", icon: "👨‍💻", description: "网站状态监控" },
+    { name: "代码统计 – Code::Stats", url: "https://codestats.net", icon: "📊", description: "代码统计服务，记录编程活动" },
     { name: "ithome.com/rss/", url: "https://www.ithome.com/rss/", icon: "📰", description: "IT之家RSS订阅源，获取最新IT资讯" },
   ]
 }
 
-// 将数据对象转换为分类数组
-const categories = computed<Category[]>(() => {
-  return Object.entries(bookmarkData).map(([id, bookmarks]) => ({
-    id,
-    name: id.charAt(0).toUpperCase() + id.slice(1),
-    bookmarks,
-    filteredBookmarks: bookmarks
-  }))
-})
+// Convert the data object to an array of categories
+const categories = Object.entries(bookmarkData).map(([id, bookmarks]) => ({
+  id,
+  name: id.charAt(0).toUpperCase() + id.slice(1), // Capitalize first letter
+  bookmarks
+}))
 
-// 模糊搜索功能
-const normalizeText = (text: string): string => {
+// Fuzzy search functions
+const normalizeText = (text) => {
   if (!text) return ''
   return text.toLowerCase().replace(/\s+/g, ' ').trim()
 }
 
-const calculateSimilarity = (str1: string, str2: string): number => {
+const calculateSimilarity = (str1, str2) => {
+  // Simple implementation of Levenshtein distance (edit distance)
   const a = normalizeText(str1)
   const b = normalizeText(str2)
   
+  // If either string is empty, the distance is the length of the other string
   if (a.length === 0) return b.length
   if (b.length === 0) return a.length
   
-  const matrix: number[][] = []
+  // For small strings, we can use a full matrix approach
+  const matrix = []
   
+  // Initialize the matrix
   for (let i = 0; i <= a.length; i++) {
     matrix[i] = [i]
   }
@@ -431,23 +445,28 @@ const calculateSimilarity = (str1: string, str2: string): number => {
     matrix[0][j] = j
   }
   
+  // Fill the matrix
   for (let i = 1; i <= a.length; i++) {
     for (let j = 1; j <= b.length; j++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1
       matrix[i][j] = Math.min(
-        matrix[i - 1][j] + 1,
-        matrix[i][j - 1] + 1,
-        matrix[i - 1][j - 1] + cost
+        matrix[i - 1][j] + 1,      // deletion
+        matrix[i][j - 1] + 1,      // insertion
+        matrix[i - 1][j - 1] + cost // substitution
       )
     }
   }
   
+  // Calculate similarity score (0-1 where 1 is perfect match)
   const maxLength = Math.max(a.length, b.length)
+  if (maxLength === 0) return 1 // Both strings are empty
+  
   const distance = matrix[a.length][b.length]
   return 1 - (distance / maxLength)
 }
 
-const fuzzyMatch = (bookmark: Bookmark, query: string): boolean => {
+// Check if a bookmark matches the search query with fuzzy matching
+const fuzzyMatch = (bookmark, query) => {
   if (!query.trim()) return true
   
   const normalizedQuery = normalizeText(query)
@@ -455,17 +474,20 @@ const fuzzyMatch = (bookmark: Bookmark, query: string): boolean => {
   const normalizedUrl = normalizeText(bookmark.url)
   const normalizedDescription = normalizeText(bookmark.description || '')
   
+  // Check for exact substring match first (faster)
   if (normalizedName.includes(normalizedQuery) || 
       normalizedUrl.includes(normalizedQuery) || 
       normalizedDescription.includes(normalizedQuery)) {
     return true
   }
   
+  // If no exact match, check for fuzzy match
   const nameSimilarity = calculateSimilarity(normalizedName, normalizedQuery)
   const urlSimilarity = calculateSimilarity(normalizedUrl, normalizedQuery)
   const descriptionSimilarity = bookmark.description ? 
     calculateSimilarity(normalizedDescription, normalizedQuery) : 0
   
+  // Threshold for considering it a match (can be adjusted)
   const SIMILARITY_THRESHOLD = 0.6
   
   return nameSimilarity >= SIMILARITY_THRESHOLD || 
@@ -473,13 +495,16 @@ const fuzzyMatch = (bookmark: Bookmark, query: string): boolean => {
          descriptionSimilarity >= SIMILARITY_THRESHOLD
 }
 
-// 过滤后的分类
+// Filtered categories based on fuzzy search
 const filteredCategories = computed(() => {
   if (!searchQuery.value.trim()) {
-    return categories.value
+    return categories.map(category => ({
+      ...category,
+      filteredBookmarks: category.bookmarks
+    }))
   }
   
-  return categories.value.map(category => {
+  return categories.map(category => {
     const filteredBookmarks = category.bookmarks.filter(bookmark => 
       fuzzyMatch(bookmark, searchQuery.value)
     )
@@ -491,70 +516,82 @@ const filteredCategories = computed(() => {
   })
 })
 
-// 总结果数
+// Total results count
 const totalResults = computed(() => {
   return filteredCategories.value.reduce((total, category) => {
     return total + category.filteredBookmarks.length
   }, 0)
 })
 
-// 高亮匹配文本
-const highlightMatch = (text: string): string => {
+// Highlight matching text in search results
+const highlightMatch = (text) => {
   if (!text || !searchQuery.value.trim()) return text
   
   const normalizedQuery = normalizeText(searchQuery.value)
   const normalizedText = normalizeText(text)
   
+  // If there's a direct substring match, highlight it
   if (normalizedText.includes(normalizedQuery)) {
     const regex = new RegExp(`(${escapeRegExp(normalizedQuery)})`, 'gi')
     return text.replace(regex, '<span class="bg-yellow-200 dark:bg-yellow-800">$1</span>')
   }
   
+  // For fuzzy matches, we'll just return the text without highlighting
+  // as it's harder to determine exactly which parts should be highlighted
   return text
 }
 
-const escapeRegExp = (string: string): string => {
+// Helper to escape special characters in regex
+const escapeRegExp = (string) => {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-// 导航状态
-const activeCategory = ref(categories.value[0]?.id || '')
-const contentRef = ref<HTMLElement | null>(null)
-const categoryRefs = ref<Record<string, HTMLElement | null>>({})
-// 滚动到分类
-const scrollToCategory = (categoryId: string) => {
+// Navigation state
+const activeCategory = ref(categories[0].id)
+const contentRef = ref(null)
+
+// Scroll to category function
+const scrollToCategory = (categoryId) => {
   nextTick(() => {
-    if (categoryRefs.value[categoryId] && contentRef.value) {
-      const container = contentRef.value
-      const element = categoryRefs.value[categoryId]
+    if (contentRef.value) {
+      // Find the category element by data-category attribute
+      const categoryElement = contentRef.value.querySelector(`[data-category="${categoryId}"]`)
       
-      if (element) {
-        const topPosition = element.offsetTop - 20
-        container.scrollTo({
+      if (categoryElement) {
+        // Calculate position to scroll to (accounting for any padding/offset)
+        const topPosition = categoryElement.offsetTop - 20
+        
+        // Smooth scroll to the element
+        contentRef.value.scrollTo({
           top: topPosition,
           behavior: 'smooth'
         })
+        
         activeCategory.value = categoryId
       }
     }
   })
 }
 
-// 处理滚动事件
+// Handle scroll to update active category
 const handleScroll = () => {
   if (!contentRef.value) return
   
-  const scrollPosition = contentRef.value.scrollTop
-  let currentCategory = categories.value[0]?.id || ''
-  let minDistance = Infinity
+  const scrollPosition = contentRef.value.scrollTop + 100 // Add offset for better detection
   
-  Object.entries(categoryRefs.value).forEach(([categoryId, element]) => {
-    if (element) {
-      const distance = Math.abs(element.offsetTop - scrollPosition - 100)
-      if (distance < minDistance) {
-        minDistance = distance
-        currentCategory = categoryId
-      }
+  // Find all category elements
+  const categoryElements = contentRef.value.querySelectorAll('[data-category]')
+  
+  // Find the category that is currently most visible
+  let currentCategory = categories[0].id
+  
+  categoryElements.forEach((element) => {
+    const rect = element.getBoundingClientRect()
+    const containerRect = contentRef.value.getBoundingClientRect()
+    
+    // Check if element is in viewport
+    if (rect.top <= containerRect.top + 100) {
+      currentCategory = element.getAttribute('data-category')
     }
   })
   
@@ -563,8 +600,9 @@ const handleScroll = () => {
   }
 }
 
-// 观察搜索变化
+// Reset active category when search changes
 watch(searchQuery, () => {
+  // Find the first category with results
   const firstCategoryWithResults = filteredCategories.value.find(
     category => category.filteredBookmarks.length > 0
   )
@@ -576,43 +614,6 @@ watch(searchQuery, () => {
     })
   }
 })
-
-// 工具提示相关事件处理
-const handleMouseOver = (event: MouseEvent) => {
-  const target = event.target as HTMLElement
-  const descriptionEl = target.classList.contains('description-text') ? 
-    target : target.parentElement
-  
-  if (descriptionEl?.classList.contains('description-text')) {
-    if (descriptionEl.scrollHeight > descriptionEl.clientHeight) {
-      tooltipContent.value = descriptionEl.getAttribute('title') || ''
-      showTooltip.value = true
-      updateTooltipPosition(event)
-    }
-  }
-}
-
-const handleMouseOut = (event: MouseEvent) => {
-  const target = event.target as HTMLElement
-  if (target.classList.contains('description-text') || 
-      target.parentElement?.classList.contains('description-text')) {
-    showTooltip.value = false
-  }
-}
-
-const handleMouseMove = (event: MouseEvent) => {
-  if (showTooltip.value) {
-    updateTooltipPosition(event)
-  }
-}
-
-const updateTooltipPosition = (event: MouseEvent) => {
-  const offset = 15
-  tooltipStyle.value = {
-    top: `${event.clientY + offset}px`,
-    left: `${event.clientX + offset}px`
-  }
-}
 </script>
 
 <style>
@@ -721,6 +722,12 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* Sidebar fixed width */
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
 }
 
 /* Fixed height for bookmark cards */

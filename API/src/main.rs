@@ -9,6 +9,7 @@ use std::os::unix::prelude::PermissionsExt;
 
 use anyhow::anyhow;
 use anyhow::Result;
+use poem::middleware::AddData;
 use poem::{
     endpoint::StaticFilesEndpoint,
     error::NotFoundError,
@@ -29,6 +30,13 @@ use tracing::{info,debug,error};
 use translate::{InputLang, OutputLang};
 pub mod lang;
 pub mod translate;
+
+pub mod xfai;
+pub mod notion;
+
+// #[derive(Clone)]
+pub struct AppState {
+}
 
 #[handler]
 fn hello_world() -> &'static str {
@@ -128,8 +136,8 @@ async fn upload(mut multipart: Multipart) -> Json<HashMap<String, String>> {
 // }
 
 lazy_static::lazy_static! {
-   static ref SPEC_JSON: Mutex<Vec<u8>> = Mutex::new(vec![]);
-   static ref CONFIG: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
+    static ref SPEC_JSON: Mutex<Vec<u8>> = Mutex::new(vec![]);
+    pub static ref CONFIG: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
 }
 
 #[handler]
@@ -139,6 +147,43 @@ async fn api_docs() -> Json<serde_json::Value> {
             .unwrap(),
     )
 }
+
+#[handler]
+async fn ai_translation(
+    poem::web::Query(params): poem::web::Query<HashMap<String, String>>,
+) -> Json<translate::TranslateResult> {
+        let txt = params.get("txt").expect("txt必传");
+    let to = params.get("to");
+    info!("txt: {} to: {:?}", txt, to);
+    match to {
+        Some(t) => Json(
+            translate::translate(vec![txt.to_owned()], InputLang::Auto, t)
+                .await
+                .unwrap(),
+        ),
+        None => Json(
+            translate::translate(
+                vec![txt.to_owned()],
+                InputLang::Auto,
+                OutputLang::SimplifiedChinese,
+            )
+            .await
+            .unwrap(),
+        ),
+    }
+}
+
+#[handler]
+async fn aitranslation(
+    poem::web::Query(params): poem::web::Query<HashMap<String, String>>,
+) -> Json<translate::TranslateResult> {
+    todo!()
+    // let txt = params.get("txt").expect("txt必传");
+    // let to = params.get("to");
+    // 先从缓存文件中读取,如果不存在就去ai,ai返回结果保存到文件?最好可视化管理
+    //如果同步到其他地方管理,那么就需要先去查是否变更,再读缓存文件
+}
+
 
 #[handler]
 async fn translation(
@@ -221,13 +266,23 @@ async fn get_bili_video_info(
     Json(result)
 }
 
+
 #[shuttle_runtime::main]
-async fn poem(
+async fn main(
     #[shuttle_runtime::Secrets] secret_store: SecretStore,
 ) -> ShuttlePoem<impl poem::Endpoint> {
+    if std::env::var_os("RUST_LOG").is_none() {
+        std::env::set_var("RUST_LOG", "poem=debug");
+    }
+
     info!("{:?}",std::env::current_dir().unwrap());
     info!("{:?}",std::env::current_exe().unwrap());
-    
+
+    // let conn = dbclient.connect().unwrap();
+    // let state = Arc::new(AppState {
+    //     db_client:Mutex::new(dbclient),
+    // });
+        // let db = Arc::new(dbclient);
     // #[cfg(target_os = "linux")]
     // {
     //     info!("准备设置bito权限");
@@ -252,6 +307,8 @@ async fn poem(
     };
     info!("ai_access_key: {ai_access_key}");
     CONFIG.lock().unwrap().insert("AI_ACCESS_KEY".to_string(), ai_access_key);
+    CONFIG.lock().unwrap().insert("XF_QWEN_API_KEY".to_string(), secret_store.get("AI_ACCESS_KEY").unwrap_or_default());
+    CONFIG.lock().unwrap().insert("XF_QWEN_TRANSLATE_PROMPT".to_string(), secret_store.get("AI_ACCESS_KEY").unwrap_or_default());
 
 
     let api_service = OpenApiService::new(Api, "Hello World", "1.0")
@@ -284,6 +341,10 @@ async fn poem(
         .at(
             "/translate",
             get(translation).with(poem::middleware::Cors::new()),
+        )
+        .at(
+            "/aitranslate",
+            post(aitranslation).with(poem::middleware::Cors::new()),
         )
         .at(
             "/bili_video_info",

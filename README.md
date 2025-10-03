@@ -15,6 +15,22 @@ run local :
  
 cargo shuttle run --external --port 8123  
 
+本地自动重新加载
+shuttle run --bacon
+
+shuttle不再维护cargo watch的方式也能够使用
+# This will execute `shuttle run` when you save a file.
+cargo watch -s 'shuttle run'
+# This will also (q)uietly (c)lear the console between runs.
+cargo watch -qcs 'shuttle run'
+
+# 部署(但还是推荐github actions自动部署)
 cargo shuttle deploy --working-directory ./API --allow-dirty --no-test  
 
  --allow-dirty  
+
+
+
+需要配置: 
+XF_QWEN_API_KEY
+XF_QWEN_TRANSLATE_PROMPT (可省,用默认)

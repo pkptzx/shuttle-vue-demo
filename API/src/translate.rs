@@ -188,3 +188,14 @@ where
 
     Ok(result.output_text[0][0].clone())
 }
+
+#[tokio::test]
+async fn test_translate(){
+    let txt:String=r"To use it, you first need to construct a translator (a struct implementing the Api trait).
+Then, you will be able to do various function calls on this struct:".to_string();
+let txts:Vec<String> = txt.lines().map(String::from).collect();
+let result =  translate(txts, InputLang::English, OutputLang::SimplifiedChinese)
+                .await
+                .unwrap();
+            println!("{result:?}")
+}
