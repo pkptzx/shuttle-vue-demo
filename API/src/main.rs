@@ -324,7 +324,7 @@ async fn main(
     let app = Route::new()
         .nest(
             "/",
-            StaticFilesEndpoint::new("public").index_file("index.html"),
+            StaticFilesEndpoint::new("public").index_file("index.html").fallback_to_index(),
         )
         .nest("/api", api_service.with(poem::middleware::Cors::new()))
         .nest("/docs", ui)
@@ -368,6 +368,7 @@ async fn main(
                 .content_type("text/html; charset=utf-8")
                 .body("404 <span style=\"color:red\">NOT_FOUND</span>!")
         });
+        
 
     Ok(app.into())
 }
